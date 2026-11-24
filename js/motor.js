@@ -169,7 +169,9 @@
   // primero lo que no ha acertado, luego lo demas
   function sesionTema(temaId, cuantos) {
     var lista = tema(temaId).ejercicios;
-    var pendientes = barajar(lista.filter(function (e) { return !(estado.res[e.id] && estado.res[e.id].ok); }));
+    // lo pendiente va de facil a dificil para no arrancar con lo mas duro
+    var pendientes = barajar(lista.filter(function (e) { return !(estado.res[e.id] && estado.res[e.id].ok); }))
+      .sort(function (a, b) { return a.nivel - b.nivel; });
     var hechos = barajar(lista.filter(function (e) { return estado.res[e.id] && estado.res[e.id].ok; }));
     return pendientes.concat(hechos).slice(0, cuantos || lista.length);
   }

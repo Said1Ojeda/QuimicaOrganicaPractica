@@ -78,6 +78,7 @@
   }
 
   function rutear() {
+    cerrarAyuda();
     var h = location.hash.replace(/^#/, '');
     var partes = h.split('/');
     if (quiz && partes[0] !== 'quiz') {
@@ -92,6 +93,7 @@
     if (!M.estado().bienvenida) return vistaBienvenida();
     if (partes[0] === 'tema' && M.tema(partes[1])) return vistaTema(partes[1], partes[2] || 'teoria');
     if (partes[0] === 'flash') return vistaFlash(partes[1] || '');
+    if (partes[0] === 'guia') return vistaGuia();
     if (partes[0] === 'quiz' && quiz) return vistaPregunta();
     vistaArbol();
   }
@@ -108,6 +110,7 @@
       '<div class="cuenta-grande"><span>Faltan para el examen</span><div id="cuenta">' + textoCuenta() + '</div></div>' +
       '<ul class="pasos-bienvenida">' +
       '<li><b>Todos los temas están abiertos.</b> Empieza por donde quieras.</li>' +
+      '<li><b>¿Nunca has nombrado compuestos?</b> Lee primero la Guía IUPAC desde cero, está en el inicio.</li>' +
       '<li><b>Un tema queda dominado</b> cuando aciertas el 80% de sus ejercicios.</li>' +
       '<li><b>Lo que falles</b> se guarda en Repaso de errores hasta que lo aciertes 2 veces seguidas.</li>' +
       '</ul>' +
@@ -129,6 +132,8 @@
       '<span>' + M.dominioGlobal() + '% del árbol dominado</span></div>' +
       '</header>' +
       tarjetaSugerencia() +
+      '<button class="sugerencia" style="--c:#60a5fa" data-ir="#guia"><span>📘</span><div><small>Antes de los ejercicios</small>' +
+      '<b>Guía IUPAC desde cero</b><small>Cómo nombrar cualquier compuesto en 6 pasos</small></div><i>›</i></button>' +
       '<section class="modos">' +
       '<button class="modo" data-accion="repaso"' + (fallos ? '' : ' disabled') + '>' +
       '<span class="ico">🔁</span><b>Repaso de errores</b><small>' + (fallos ? fallos + ' pendientes' : 'Nada pendiente') + '</small></button>' +
@@ -212,9 +217,67 @@
     return '<svg class="arbol" viewBox="0 0 360 ' + alto + '" role="img" aria-label="Árbol de temas">' + partes.join('') + '</svg>';
   }
 
+  // guia de nomenclatura desde cero
+  function htmlRaices() {
+    return '<div class="raices">' + window.GUIA.raices.map(function (r) {
+      return '<span><b>' + r[0] + ' C</b>' + r[1] + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function vistaGuia() {
+    var G = window.GUIA;
+    M.bitacora('abrió la guía IUPAC', '', '', '');
+    pintar(
+      '<header class="cab-tema"><button class="volver" data-ir="#arbol">← Árbol</button><h1>Guía IUPAC desde cero</h1>' +
+      '<small>Léela una vez con calma y vuelve cuando te trabes.</small></header>' +
+      '<div class="tarjeta teoria"><h3>1. Cómo se arma un nombre</h3>' + G.intro.join('') + '</div>' +
+      '<div class="tarjeta"><h3>2. La raíz cuenta carbonos</h3>' + htmlRaices() + '</div>' +
+      '<div class="tarjeta"><h3>3. El sufijo dice la familia</h3>' +
+      '<p class="sub">Ordenados de mayor a menor prioridad. Si hay dos grupos, el de arriba da el sufijo y el otro va como prefijo.</p>' +
+      G.grupos.map(function (g, i) {
+        return '<div class="grupo-fila"><span class="num">' + (i + 1) + '</span><div><b>' + g[0] + '</b> <span class="formula">' + g[1] + '</span>' +
+          '<small>Sufijo ' + g[2] + ' · como prefijo ' + g[3] + '</small></div></div>';
+      }).join('') + '</div>' +
+      '<div class="tarjeta"><h3>4. Los 6 pasos para cualquier compuesto</h3><ol class="pasos">' +
+      G.pasos.map(function (p) { return '<li><b>' + p.t + '.</b> ' + p.d + '</li>'; }).join('') + '</ol></div>' +
+      '<div class="tarjeta ejemplo"><h3>5. Ejemplo completo</h3>' + mol(G.ejemplo.s, G.ejemplo.c) +
+      '<ol class="pasos">' + G.ejemplo.pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol></div>' +
+      '<div class="tarjeta"><h3>6. Grupos que cuelgan (alquilos)</h3><div class="raices">' +
+      G.alquilos.map(function (a) { return '<span><b>' + a[0] + '</b>' + a[1] + '</span>'; }).join('') + '</div></div>' +
+      '<div class="tarjeta"><h3>7. Reglas de escritura</h3><ul class="lista">' +
+      G.escritura.map(function (e) { return '<li>' + e + '</li>'; }).join('') + '</ul></div>' +
+      '<div class="pie-tema"><button class="btn btn-grande" data-ir="#tema/alcanos/nombres">Seguir con alcanos →</button></div>'
+    );
+  }
+
+  // hoja de ayuda dentro de una pregunta sin salir del ejercicio
+  function abrirAyuda() {
+    var ej = quiz.lista[quiz.i];
+    var t = M.tema(ej.tema);
+    M.bitacora('pidió ayuda', t.titulo, ej.id, '');
+    var hoja = document.createElement('div');
+    hoja.className = 'ayuda-fondo';
+    hoja.innerHTML = '<div class="ayuda" role="dialog" aria-label="Ayuda">' +
+      '<div class="ayuda-cab"><b>📖 Ayuda · ' + esc(t.titulo) + '</b><button class="volver" data-accion="cerrar-ayuda" aria-label="Cerrar">✕</button></div>' +
+      '<h3>Cómo se nombra</h3><ol class="pasos">' + t.nomenclatura.pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol>' +
+      '<h3>Raíz según carbonos</h3>' + htmlRaices() +
+      '<h3>Ejemplo resuelto</h3>' + mol(t.nomenclatura.ejemplos[0].s, t.nomenclatura.ejemplos[0].c) +
+      '<p class="respuesta-ej">Nombre: <b>' + t.nomenclatura.ejemplos[0].nom + '</b></p>' +
+      '<button class="btn btn-grande" data-accion="cerrar-ayuda">Volver a la pregunta</button></div>';
+    document.body.appendChild(hoja);
+    document.body.classList.add('sin-scroll');
+    hidratar(hoja);
+  }
+
+  function cerrarAyuda() {
+    var h = document.querySelector('.ayuda-fondo');
+    if (h) h.remove();
+    document.body.classList.remove('sin-scroll');
+  }
+
   // pantalla de un tema
   var PESTANAS = [
-    ['teoria', 'Teoría'], ['nombres', 'Nombres'], ['reacciones', 'Reacciones'],
+    ['teoria', 'Teoría'], ['nombres', 'IUPAC'], ['reacciones', 'Reacciones'],
     ['propiedades', 'Propiedades'], ['errores', 'Errores típicos'], ['practica', 'Ejercicios']
   ];
 
@@ -233,13 +296,23 @@
       '<div class="barra"><i style="width:' + d + '%;background:' + t.color + '"></i></div>' +
       '<small>' + d + '% dominado · ' + M.respondidos(id) + ' de ' + t.ejercicios.length + ' ejercicios intentados</small>' +
       '</header>' +
+      '<p class="ruta">Ruta sugerida: Teoría → IUPAC → Reacciones → Propiedades → Errores típicos → Ejercicios</p>' +
       '<nav class="pestanas">' + PESTANAS.map(function (p) {
         return '<button data-ir="#tema/' + id + '/' + p[0] + '" class="' + (p[0] === pest ? 'activa' : '') + '"' +
           (p[0] === pest ? ' style="border-color:' + t.color + ';color:' + t.color + '"' : '') + '>' + p[1] + '</button>';
       }).join('') + '</nav>' +
       '<section class="contenido">' + cuerpo(t) + '</section>' +
-      (pest !== 'practica' ? '<div class="pie-tema"><button class="btn btn-grande" style="background:' + t.color + '" data-ir="#tema/' + id + '/practica">Practicar este tema</button></div>' : '')
+      (pest !== 'practica' ? piePaso(t, pest) : '')
     );
+  }
+
+  // boton al siguiente paso de la ruta y boton de practicar
+  function piePaso(t, pest) {
+    var i = PESTANAS.map(function (p) { return p[0]; }).indexOf(pest);
+    var sig = PESTANAS[i + 1];
+    return '<div class="pie-tema acciones fila">' +
+      '<button class="btn btn-sec" data-ir="#tema/' + t.id + '/' + sig[0] + '">' + sig[1] + ' →</button>' +
+      '<button class="btn" style="background:' + t.color + '" data-ir="#tema/' + t.id + '/practica">Practicar</button></div>';
   }
 
   function tabTeoria(t) {
@@ -248,7 +321,9 @@
 
   function tabNombres(t) {
     var n = t.nomenclatura;
-    return '<div class="tarjeta"><h3>Paso a paso</h3><ol class="pasos">' +
+    return '<button class="sugerencia" style="--c:#60a5fa" data-ir="#guia"><span>📘</span><div><small>¿Primera vez con IUPAC?</small>' +
+      '<b>Empieza por la guía desde cero</b></div><i>›</i></button>' +
+      '<div class="tarjeta"><h3>Paso a paso en ' + esc(t.titulo.toLowerCase()) + '</h3><ol class="pasos">' +
       n.pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol></div>' +
       n.ejemplos.map(function (e, i) {
         return '<div class="tarjeta ejemplo"><h3>Ejemplo ' + (i + 1) + '</h3>' + mol(e.s, e.c) +
@@ -361,6 +436,7 @@
       '<span class="chip nivel n' + ej.nivel + '">' + NIVELES[ej.nivel] + '</span>' +
       '<span class="chip tipo">' + TIPOS[ej.tipo] + '</span></div>' +
       '<h2 class="enunciado">' + ej.q + '</h2>' +
+      (quiz.modo !== 'simulacro' ? '<button class="ayuda-btn" data-accion="ayuda">📖 ¿Cómo se hacía esto? Ver ayuda</button>' : '') +
       (ej.mol ? mol(ej.mol.s, ej.mol.c, 'grande') : '') +
       (ej.reac ? '<div class="ecuacion">' + ej.reac + '</div>' : '') +
       zonaRespuesta(ej) +
@@ -668,6 +744,12 @@
         var id = el.getAttribute('data-tema');
         iniciarQuiz(M.sesionTema(id, n || 0), 'tema', { temaId: id });
         break;
+      case 'ayuda':
+        abrirAyuda();
+        break;
+      case 'cerrar-ayuda':
+        cerrarAyuda();
+        break;
       case 'fallos-tema':
         var idf = el.getAttribute('data-tema');
         iniciarQuiz(M.sesionFallosTema(idf), 'tema', { temaId: idf });
@@ -769,6 +851,7 @@
 
   // un solo escuchador para todos los clics
   document.addEventListener('click', function (e) {
+    if (e.target.classList && e.target.classList.contains('ayuda-fondo')) return cerrarAyuda();
     var el = e.target.closest('[data-accion],[data-ir],[data-tema]');
     if (!el || el.disabled) return;
     if (el.hasAttribute('data-accion')) return accion(el.getAttribute('data-accion'), el);
