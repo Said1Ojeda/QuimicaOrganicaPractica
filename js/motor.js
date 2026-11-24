@@ -81,6 +81,7 @@
       .normalize('NFD').replace(/[̀-ͯ]/g, '')
       .replace(/[‐-―−]/g, '-')
       .replace(/\s+/g, '')
+      .replace(/(\d)[.;](?=\d)/g, '$1,')
       .replace(/[.]+$/, '');
   }
 
@@ -176,6 +177,27 @@
   function sesionRepaso() {
     var m = mapa();
     return barajar(Object.keys(estado.fallos).filter(function (id) { return m[id]; }).map(function (id) { return m[id]; }));
+  }
+
+  function sesionFallosTema(temaId) {
+    return sesionRepaso().filter(function (e) { return e.tema === temaId; });
+  }
+
+  // tema con menor dominio para sugerirlo en el inicio
+  function temaSugerido() {
+    var ts = temas().filter(function (t) { return !dominado(t.id); });
+    if (!ts.length) return null;
+    return ts.sort(function (a, b) { return dominio(a.id) - dominio(b.id) || a.n - b.n; })[0];
+  }
+
+  function resumenSimulacros() {
+    var l = estado.simulacros;
+    if (!l.length) return null;
+    return {
+      ultima: l[l.length - 1].nota,
+      mejor: Math.max.apply(null, l.map(function (x) { return x.nota; })),
+      veces: l.length
+    };
   }
 
   function cuantosFallos() {
@@ -274,7 +296,8 @@
     dominio: dominio, dominado: dominado, dominioGlobal: dominioGlobal, respondidos: respondidos,
     sesionTema: sesionTema, sesionRepaso: sesionRepaso, sesionRelampago: sesionRelampago,
     sesionSimulacro: sesionSimulacro, guardarSimulacro: guardarSimulacro,
-    cuantosFallos: cuantosFallos, flashcards: flashcards, racha: racha,
+    cuantosFallos: cuantosFallos, sesionFallosTema: sesionFallosTema,
+    temaSugerido: temaSugerido, resumenSimulacros: resumenSimulacros, flashcards: flashcards, racha: racha,
     reiniciar: reiniciar, marcarBienvenida: marcarBienvenida,
     estado: function () { return estado; }, dibujar: dibujar,
     DOMINIO_MINIMO: DOMINIO_MINIMO

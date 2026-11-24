@@ -128,12 +128,13 @@
       '<div class="global"><div class="barra"><i style="width:' + M.dominioGlobal() + '%"></i></div>' +
       '<span>' + M.dominioGlobal() + '% del árbol dominado</span></div>' +
       '</header>' +
+      tarjetaSugerencia() +
       '<section class="modos">' +
       '<button class="modo" data-accion="repaso"' + (fallos ? '' : ' disabled') + '>' +
       '<span class="ico">🔁</span><b>Repaso de errores</b><small>' + (fallos ? fallos + ' pendientes' : 'Nada pendiente') + '</small></button>' +
       '<button class="modo" data-accion="flash"><span class="ico">🃏</span><b>Flashcards</b><small>Grupos, sufijos y reacciones</small></button>' +
       '<button class="modo" data-accion="relampago"><span class="ico">⚡</span><b>Relámpago</b><small>10 al azar de todo</small></button>' +
-      '<button class="modo" data-accion="simulacro"><span class="ico">📝</span><b>Simulacro</b><small>30 preguntas, 60 min</small></button>' +
+      '<button class="modo" data-accion="simulacro"><span class="ico">📝</span><b>Simulacro</b><small>' + textoSimulacro() + '</small></button>' +
       '</section>' +
       '<section class="arbol-caja"><h2>Tu árbol</h2><p class="sub">Toca una rama para estudiar ese tema</p>' + svgArbol() + '</section>' +
       '<section class="leyenda">' + Object.keys(FAMILIAS).map(function (k) {
@@ -141,6 +142,24 @@
       }).join('') + '</section>' +
       '<footer class="pie"><button class="btn btn-peligro" data-accion="reiniciar">Reiniciar progreso</button></footer>'
     );
+  }
+
+  function textoSimulacro() {
+    var r = M.resumenSimulacros();
+    if (!r) return '30 preguntas, 60 min';
+    return 'Último ' + r.ultima + ' · mejor ' + r.mejor;
+  }
+
+  // sugiere el tema mas flojo para no perder tiempo eligiendo
+  function tarjetaSugerencia() {
+    var t = M.temaSugerido();
+    if (!t) {
+      return '<div class="sugerencia" style="--c:#4ade80"><span>🌳</span><div><b>¡Árbol completo!</b>' +
+        '<small>Haz un simulacro para medirte.</small></div></div>';
+    }
+    return '<button class="sugerencia" style="--c:' + t.color + '" data-ir="#tema/' + t.id + '/practica">' +
+      '<span>🎯</span><div><small>Te conviene practicar</small><b>' + esc(t.titulo) + '</b>' +
+      '<small>' + M.dominio(t.id) + '% dominado</small></div><i>›</i></button>';
   }
 
   // dibuja el arbol con una rama por tema, el tema 1 abajo
@@ -269,6 +288,7 @@
       '<div class="acciones">' +
       '<button class="btn btn-grande" style="background:' + t.color + '" data-accion="practica" data-tema="' + t.id + '" data-n="10">Ronda de 10</button>' +
       '<button class="btn btn-sec" data-accion="practica" data-tema="' + t.id + '" data-n="0">Todos los ejercicios (' + t.ejercicios.length + ')</button>' +
+      (M.sesionFallosTema(t.id).length ? '<button class="btn btn-sec" data-accion="fallos-tema" data-tema="' + t.id + '">Repasar mis fallos de este tema (' + M.sesionFallosTema(t.id).length + ')</button>' : '') +
       '</div>';
   }
 
@@ -358,7 +378,7 @@
         '<button class="op" data-accion="elegir" data-v="f">Falso</button></div>' + botonSimulacro();
     }
     if (ej.tipo === 'escribir') {
-      return '<div class="escribir"><input id="escrito" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe el nombre IUPAC" aria-label="Tu respuesta">' +
+      return '<div class="escribir"><input id="escrito" type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe el nombre IUPAC" aria-label="Tu respuesta">' +
         '<small>Ejemplo de formato: 2,3-dimetilpentano</small>' +
         '<button class="btn btn-grande" data-accion="revisar">' + (quiz.modo === 'simulacro' ? 'Siguiente' : 'Revisar') + '</button></div>';
     }
@@ -504,9 +524,11 @@
     }
 
     var malas = quiz.registro.filter(function (r) { return !r.ok; });
-    if (quiz.modo === 'simulacro' && malas.length) {
+    if (malas.length && quiz.modo !== 'repaso') {
       html += '<div class="tarjeta"><h3>Revisa tus errores</h3>' + malas.map(function (r) {
-        return '<details class="revision"><summary>' + r.ej.q + '</summary>' + respuestaCorrecta(r.ej) +
+        return '<details class="revision"><summary>' + r.ej.q + '</summary>' +
+          (r.ej.mol ? mol(r.ej.mol.s, r.ej.mol.c) : '') + (r.ej.reac ? '<div class="ecuacion">' + r.ej.reac + '</div>' : '') +
+          respuestaCorrecta(r.ej) +
           '<ol class="pasos">' + r.ej.exp.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol></details>';
       }).join('') + '</div>';
     }
@@ -638,6 +660,10 @@
         var id = el.getAttribute('data-tema');
         iniciarQuiz(M.sesionTema(id, n || 0), 'tema', { temaId: id });
         break;
+      case 'fallos-tema':
+        var idf = el.getAttribute('data-tema');
+        iniciarQuiz(M.sesionFallosTema(idf), 'tema', { temaId: idf });
+        break;
       case 'elegir':
         if (quiz.respondida) return;
         var valor = el.hasAttribute('data-v') ? el.getAttribute('data-v') === 'v' : +el.getAttribute('data-k');
@@ -726,6 +752,11 @@
     var rev = app.querySelector('.acciones.fila [data-accion="revisar"]');
     if (rev) rev.disabled = quiz.orden.length !== ej.items.length;
   }
+
+  // las moleculas dentro de un detalle cerrado se dibujan al abrirlo
+  document.addEventListener('toggle', function (e) {
+    if (e.target.open) hidratar(e.target);
+  }, true);
 
   // un solo escuchador para todos los clics
   document.addEventListener('click', function (e) {

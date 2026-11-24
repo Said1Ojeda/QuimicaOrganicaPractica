@@ -348,3 +348,24 @@ svg.arbol { display: block; width: 100%; height: auto; }
 @media (min-width: 600px) {
   #app { padding-top: 28px; }
 }
+
+/* tarjeta de sugerencia en el inicio */
+.sugerencia {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--c);
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+.sugerencia > span { font-size: 1.6rem; }
+.sugerencia div { display: flex; flex-direction: column; }
+.sugerencia b { font-size: 1.02rem; }
+.sugerencia i { font-style: normal; font-size: 1.6rem; color: var(--suave); }
