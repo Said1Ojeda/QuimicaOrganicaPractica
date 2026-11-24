@@ -290,6 +290,23 @@
     }, function () { svg.outerHTML = '<p class="mol-error">' + smiles + '</p>'; });
   }
 
+  // bitacora que manda cada evento a la hoja de Google
+  var BITACORA_URL = 'https://script.google.com/macros/s/AKfycbwD1ek5ef-H8jTw7dRZhAWI5GGLJMKcxvphSWaRNwREWliSa9GLqhKLjJSf2uX2-kFf8w/exec';
+  var BITACORA_CLAVE = 'hillary-2026';
+
+  function bitacora(evento, tema, detalle, resultado) {
+    var cuerpo = JSON.stringify({
+      clave: BITACORA_CLAVE, evento: evento, tema: tema || '',
+      detalle: detalle || '', resultado: resultado === undefined ? '' : String(resultado)
+    });
+    try {
+      // texto plano para que el navegador no pida permiso previo al servidor
+      var blob = new Blob([cuerpo], { type: 'text/plain;charset=utf-8' });
+      if (navigator.sendBeacon && navigator.sendBeacon(BITACORA_URL, blob)) return;
+      fetch(BITACORA_URL, { method: 'POST', mode: 'no-cors', body: cuerpo, keepalive: true }).catch(function () {});
+    } catch (e) { /* si falla no afecta el estudio */ }
+  }
+
   window.Motor = {
     temas: temas, tema: tema, mapa: mapa, barajar: barajar,
     normalizar: normalizar, revisar: revisar, registrar: registrar,
@@ -300,6 +317,6 @@
     temaSugerido: temaSugerido, resumenSimulacros: resumenSimulacros, flashcards: flashcards, racha: racha,
     reiniciar: reiniciar, marcarBienvenida: marcarBienvenida,
     estado: function () { return estado; }, dibujar: dibujar,
-    DOMINIO_MINIMO: DOMINIO_MINIMO
+    DOMINIO_MINIMO: DOMINIO_MINIMO, bitacora: bitacora
   };
 })();

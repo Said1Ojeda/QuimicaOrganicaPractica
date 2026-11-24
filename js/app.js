@@ -304,6 +304,7 @@
       arrancarReloj();
     }
     prepararPregunta();
+    M.bitacora('inicio de ronda', textoModo(), lista.length + ' preguntas', '');
     ir('#quiz');
   }
 
@@ -415,6 +416,8 @@
     if (ok) quiz.aciertos++;
     quiz.registro.push({ ej: ej, ok: ok, valor: valor });
     var nuevo = M.registrar(ej.id, ok);
+    M.bitacora('respuesta', M.tema(ej.tema).titulo, ej.id + ' · ' + TIPOS[ej.tipo] + ' · ' + NIVELES[ej.nivel] + ' · ' + textoModo(), ok ? 'bien' : 'mal');
+    if (nuevo) M.bitacora('tema dominado', M.tema(nuevo).titulo, '', M.dominio(nuevo) + '%');
 
     if (quiz.modo === 'simulacro') return avanzar();
 
@@ -508,6 +511,9 @@
         return { id: t.id, a: p.a, n: p.n, pct: Math.round(p.a * 100 / p.n) };
       });
       M.guardarSimulacro(nota, desglose);
+      M.bitacora('simulacro', 'Todos los temas',
+        'Flojos ' + (desglose.filter(function (d) { return d.pct < 60; }).map(function (d) { return M.tema(d.id).corto; }).join(', ') || 'ninguno'),
+        nota + '/100');
       var usado = Math.round((Date.now() - quiz.inicio) / 6e4);
       html += '<div class="nota ' + (nota >= 61 ? 'aprobada' : '') + '"><span>' + nota + '</span><small>/ 100</small></div>' +
         '<p class="lead">' + mensajeNota(nota) + '</p>' +
@@ -519,6 +525,7 @@
             '<b>' + d.a + '/' + d.n + '</b></div>';
         }).join('') + '<p class="sub">Los temas en rojo son los que más conviene repasar.</p></div>';
     } else {
+      M.bitacora('fin de ronda', textoModo(), quiz.aciertos + ' de ' + total, nota + '%');
       html += '<div class="nota"><span>' + quiz.aciertos + '</span><small>/ ' + total + '</small></div>' +
         '<p class="lead">' + mensajeNota(nota) + '</p>';
     }
@@ -653,6 +660,7 @@
         iniciarQuiz(M.sesionSimulacro(30), 'simulacro');
         break;
       case 'flash':
+        M.bitacora('flashcards', '', '', '');
         ir('#flash/');
         break;
       case 'practica':
@@ -733,6 +741,7 @@
         } else {
           clearTimeout(tiempoReinicio);
           tiempoReinicio = null;
+          M.bitacora('reinició el progreso', '', '', M.dominioGlobal() + '% antes');
           M.reiniciar();
           vistaArbol();
         }
@@ -774,5 +783,6 @@
     }
   });
 
+  M.bitacora('abrió la página', '', 'Racha ' + M.racha() + ' días', M.dominioGlobal() + '% del árbol');
   rutear();
 })();
