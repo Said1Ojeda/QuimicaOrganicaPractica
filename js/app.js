@@ -455,7 +455,7 @@
         '<button class="op" data-accion="elegir" data-v="f">Falso</button></div>' + botonSimulacro();
     }
     if (ej.tipo === 'escribir') {
-      return '<div class="escribir"><input id="escrito" type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe el nombre IUPAC" aria-label="Tu respuesta">' +
+      return '<div class="escribir"><input id="escrito" type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Escribe el nombre IUPAC" aria-label="Tu respuesta">' +
         '<small>Ejemplo de formato: 2,3-dimetilpentano</small>' +
         '<button class="btn btn-grande" data-accion="revisar">' + (quiz.modo === 'simulacro' ? 'Siguiente' : 'Revisar') + '</button></div>';
     }
