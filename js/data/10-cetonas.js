@@ -148,7 +148,7 @@
       id: 'cet-02', tipo: 'escribir', nivel: 1,
       q: 'Escribe el nombre IUPAC.',
       mol: { s: 'CCC(C)=O', c: 'CH<sub>3</sub>–CO–CH<sub>2</sub>–CH<sub>3</sub>' },
-      resp: ['butanona', '2-butanona', 'butan-2-ona'],
+      resp: ['butanona', '2-butanona', 'butan-2-ona', 'etil metil cetona', 'metil etil cetona'],
       exp: [
         'Cadena de 4 C con el C=O.',
         'El C=O solo puede estar en el C2, si estuviera en el C1 sería aldehído.',

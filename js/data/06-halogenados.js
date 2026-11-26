@@ -142,7 +142,7 @@
       id: 'hal-02', tipo: 'escribir', nivel: 1,
       q: 'Escribe el nombre IUPAC.',
       mol: { s: 'CC(C)Cl', c: 'CH<sub>3</sub>–CHCl–CH<sub>3</sub>' },
-      resp: ['2-cloropropano'],
+      resp: ['2-cloropropano', 'cloruro de isopropilo'],
       exp: [
         'Cadena de 3 C, propano.',
         'El Cl está en el carbono central.',

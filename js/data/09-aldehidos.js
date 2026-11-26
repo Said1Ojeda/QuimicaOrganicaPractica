@@ -409,7 +409,7 @@
       id: 'ald-23', tipo: 'escribir', nivel: 3,
       q: 'Escribe el nombre IUPAC de este dialdehído.',
       mol: { s: 'O=CCCC=O', c: 'OHC–CH<sub>2</sub>–CH<sub>2</sub>–CHO' },
-      resp: ['butanodial'],
+      resp: ['butanodial', 'succinaldehído'],
       exp: [
         'Cadena de 4 C con un CHO en cada extremo.',
         'Dos grupos aldehído llevan el sufijo -dial.',

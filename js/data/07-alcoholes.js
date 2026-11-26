@@ -158,7 +158,7 @@
       id: 'ol-02', tipo: 'escribir', nivel: 1,
       q: 'Escribe el nombre IUPAC.',
       mol: { s: 'CC(C)O', c: 'CH<sub>3</sub>–CH(OH)–CH<sub>3</sub>' },
-      resp: ['2-propanol', 'propan-2-ol'],
+      resp: ['2-propanol', 'propan-2-ol', 'isopropanol', 'alcohol isopropílico'],
       exp: [
         'Cadena de 3 C con OH en el centro.',
         'El OH queda en el C2.',

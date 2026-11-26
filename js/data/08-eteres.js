@@ -171,7 +171,7 @@
       id: 'et-05', tipo: 'escribir', nivel: 2,
       q: 'Escribe el nombre IUPAC.',
       mol: { s: 'CC(C)OC', c: 'CH<sub>3</sub>–O–CH(CH<sub>3</sub>)<sub>2</sub>' },
-      resp: ['2-metoxipropano'],
+      resp: ['2-metoxipropano', 'isopropil metil éter', 'metil isopropil éter'],
       exp: [
         'Grupos metilo e isopropilo.',
         'Cadena principal propano.',
