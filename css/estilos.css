@@ -28,7 +28,7 @@ body {
 #app {
   max-width: 560px;
   margin: 0 auto;
-  padding: 16px 14px calc(32px + env(safe-area-inset-bottom));
+  padding: calc(16px + env(safe-area-inset-top)) 14px calc(32px + env(safe-area-inset-bottom));
   overflow-wrap: anywhere;
 }
 
